@@ -1,0 +1,12 @@
+torch==2.0.0
+torchvision==0.15.0
+torchaudio==2.0.0
+--index-url https://download.pytorch.org/whl/cpu
+
+streamlit==1.28.0
+opencv-python==4.8.0.76
+librosa==0.10.0
+spotipy==2.23.0
+scenedetect==0.6.2
+ffmpeg-python==0.2.0
+python-dotenv==1.0.0
