@@ -4,60 +4,61 @@ from scene_detector import split_video
 from music_matcher import get_mood_based_tracks
 import cv2
 import tempfile
-import webbrowser
 import os
+from dotenv import load_dotenv
 
-# Expanded mood mapping with subcategories
-MOOD_CATEGORIES = {
-    "Happy": ["joyful", "celebratory", "playful", "upbeat"],
-    "Sad": ["melancholic", "heartbroken", "lonely", "reflective"], 
-    "Energetic": ["intense", "adrenaline", "dynamic", "powerful"],
-    "Calm": ["peaceful", "serene", "meditative", "dreamy"],
-    "Neutral": ["ambient", "background", "instrumental"]
-}
+# Initialize environment
+load_dotenv()
 
-# Page config
+# Page configuration
 st.set_page_config(
     page_title="AI Music Mood Designer",
     page_icon="🎵",
     layout="wide"
 )
 
+# Expanded mood categories with subgenres
+MOOD_CATEGORIES = {
+    "Happy": ["joyful", "celebratory", "upbeat"],
+    "Sad": ["melancholic", "heartbreak", "reflective"],
+    "Energetic": ["intense", "powerful", "adrenaline"],
+    "Calm": ["peaceful", "meditative", "dreamy"],
+    "Neutral": ["ambient", "instrumental"]
+}
+
 def display_tracks(mood):
-    """Handle all mood categories with sub-genres"""
+    """Display tracks for each mood subcategory"""
     if mood in MOOD_CATEGORIES:
-        st.subheader(f"🎧 {mood} Mood Recommendations")
-        
-        # Get tracks for each subcategory
         for sub_mood in MOOD_CATEGORIES[mood]:
-            with st.expander(f"🔊 {sub_mood.capitalize()}"):
+            with st.expander(f"🎧 {sub_mood.capitalize()} tracks"):
                 tracks = get_mood_based_tracks(sub_mood)
                 if tracks:
-                    for track in tracks[:3]:  # Show top 3 per subcategory
+                    for track in tracks:
                         col1, col2 = st.columns([1, 3])
                         with col1:
                             st.audio(track["preview_url"])
                         with col2:
-                            st.markdown(f"**{track['name']}** by {track['artist']}")
-                            st.markdown(f"[Listen on Spotify]({track['url']})")
+                            st.write(f"**{track['name']}** by {track['artist']}")
                 else:
-                    st.warning(f"No {sub_mood} tracks found")
+                    st.warning("No tracks found for this mood")
 
 def main():
     st.title("🎵 AI Music Mood Designer")
-    uploaded_file = st.file_uploader("Upload video", type=["mp4", "mov"])
+    uploaded_file = st.file_uploader("Upload a video", type=["mp4", "mov"])
 
     if uploaded_file:
-        with tempfile.NamedTemporaryFile(delete=False) as tfile:
-            tfile.write(uploaded_file.read())
-            video_path = tfile.name
-
+        video_path = None
         try:
-            # Scene analysis
+            # Save uploaded file temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tfile:
+                tfile.write(uploaded_file.read())
+                video_path = tfile.name
+
+            # Scene detection
             scenes = split_video(video_path)
             st.write(f"📹 Detected {len(scenes)} scenes")
-            
-            # Mood detection (first scene only)
+
+            # Mood analysis (first frame only)
             cap = cv2.VideoCapture(video_path)
             ret, frame = cap.read()
             
@@ -65,20 +66,29 @@ def main():
                 st.image(frame, channels="BGR", caption="Analyzed Frame")
                 mood = analyze_mood(frame)
                 
-                # Enhanced mood display
+                # Display mood with emoji
                 mood_emoji = {
                     "Happy": "😊",
-                    "Sad": "😢", 
+                    "Sad": "😢",
                     "Energetic": "⚡",
                     "Calm": "🌿",
-                    "Neutral": "🎼"
+                    "Neutral": "🎵"
                 }.get(mood, "")
-                
                 st.success(f"{mood_emoji} Detected Mood: **{mood}**")
-                display_tracks(mood)
                 
+                # Get and display tracks
+                display_tracks(mood)
+            
+        except Exception as e:
+            st.error(f"Error processing video: {str(e)}")
+        
         finally:
-            os.unlink(video_path)
+            # Clean up temp file
+            if video_path and os.path.exists(video_path):
+                try:
+                    os.unlink(video_path)
+                except PermissionError:
+                    pass  # Skip if file is locked
 
 if __name__ == "__main__":
     main()

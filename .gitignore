@@ -1,7 +1,6 @@
 # Virtual environment
 venv/
 .env
-.cache
 
 # Python cache
 __pycache__/
@@ -35,3 +34,8 @@ dist/
 # System files
 .DS_Store
 Thumbs.db
+
+# Spotify cache
+.spotify_cache
+.cache
+*.cache
