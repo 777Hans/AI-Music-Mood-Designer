@@ -7,3 +7,15 @@ Using guaranteed tracks for instrumental
 [2025-06-16 10:41:50] Fetching tracks for: instrumental
 [2025-06-16 10:41:50] Using guaranteed tracks for instrumental
 [2025-06-16 10:42:06] Logged user selection: Stars for ambient
+[2025-06-16 11:07:23] Fetching tracks for: ambient
+[2025-06-16 11:07:23] Initializing Spotify client...
+[2025-06-16 11:07:26] Client initialized and authenticated successfully
+[2025-06-16 11:07:26] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'market': 'US', 'min_valence': 0.3, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.3}
+[2025-06-16 11:07:26] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.3&min_valence=0.3&max_valence=0.5:
+ None, reason: None
+[2025-06-16 11:23:25] Fetching tracks for: ambient
+[2025-06-16 11:23:25] Initializing Spotify client...
+[2025-06-16 11:23:26] Client initialized and authenticated successfully
+[2025-06-16 11:23:26] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'market': 'US', 'min_valence': 0.3, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.3}
+[2025-06-16 11:23:26] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.3&min_valence=0.3&max_valence=0.5:
+ None, reason: None

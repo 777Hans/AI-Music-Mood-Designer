@@ -7,7 +7,6 @@ import cv2
 import tempfile
 import os
 from dotenv import load_dotenv
-import urllib.request
 import time
 
 # Initialize environment
@@ -39,7 +38,7 @@ def display_tracks(mood, scenes, scene_assignments):
                     for track in tracks:
                         col1, col2, col3 = st.columns([1, 3, 2])
                         with col1:
-                            if track["preview_url"]:
+                            if track.get("preview_url"):
                                 try:
                                     st.audio(track["preview_url"], format="audio/mp3")
                                 except Exception as e:
@@ -115,7 +114,7 @@ def main():
                 # Show assigned tracks
                 if st.session_state.scene_assignments:
                     st.subheader("Assigned Tracks")
-                    for scene_idx, assignment in st.session_state.scene_assignments.items():
+                    for scene_idx, assignment in sorted(st.session_state.scene_assignments.items()):
                         st.write(f"Scene {scene_idx+1} ({assignment['start_time']:.1f}s - {assignment['end_time']:.1f}s): **{assignment['track']['name']}** by {assignment['track']['artist']}")
                 
                 # Render and download video
@@ -143,7 +142,7 @@ def main():
                 try:
                     os.unlink(video_path)
                 except PermissionError:
-                    pass  # Skip if file is locked
+                    pass
 
 if __name__ == "__main__":
     main()
