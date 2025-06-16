@@ -7,6 +7,9 @@ import json
 import time
 import requests
 import random
+import logging
+
+logging.basicConfig(filename="debug.log", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 load_dotenv()
 
@@ -65,8 +68,7 @@ GUARANTEED_TRACKS = {
 
 def debug_log(message):
     """Write debug messages to log file"""
-    with open("debug.log", "a") as f:
-        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
+    logging.debug(message)
 
 def log_user_selection(sub_mood, track_id, track_name, artist):
     """Log user-selected tracks for adaptive learning"""
@@ -161,12 +163,13 @@ def get_mood_based_tracks(sub_mood, language="all"):
             debug_log("Spotify client not initialized, falling back to guaranteed tracks")
             if lower_mood in GUARANTEED_TRACKS:
                 tracks = [fetch_track_details(sp, t["id"], t["name"], t["artist"]) for t in GUARANTEED_TRACKS[lower_mood]]
-                return [t for t in tracks if t.get("preview_url")] or tracks
+                return [t for t in tracks if t.get("preview_url")] or tracks[:5]
             return []
         
         # Get valid genres
         try:
             available_genres = sp.recommendation_genre_seeds()["genres"]
+            debug_log(f"Available Spotify genres: {available_genres}")
         except Exception as e:
             debug_log(f"Failed to fetch available genres: {str(e)}")
             available_genres = FALLBACK_GENRES
@@ -174,9 +177,10 @@ def get_mood_based_tracks(sub_mood, language="all"):
         # Get genre and audio features
         mood_config = MOOD_TO_GENRE.get(lower_mood, {"genres": FALLBACK_GENRES, "min_valence": 0.3, "max_valence": 0.7, "min_energy": 0.3, "max_energy": 0.7})
         genres = mood_config.get("genres", FALLBACK_GENRES)
-        valid_genres = [g for g in genres if g in available_genres and (language == "all" or (language == "tamil" and "tamil" in g) or (language == "english" and "tamil" not in g))]
+        valid_genres = [g for g in genres if g in available_genres]
+        valid_genres = [g for g in valid_genres if language == "all" or (language == "tamil" and "tamil" in g) or (language == "english" and "tamil" not in g)]
         if not valid_genres:
-            valid_genres = [g for g in FALLBACK_GENRES if (language == "all" or (language == "tamil" and "tamil" in g) or (language == "english" and "tamil" not in g))]
+            valid_genres = [g for g in FALLBACK_GENRES if language == "all" or (language == "tamil" and "tamil" in g) or (language == "english" and "tamil" not in g)]
         
         params = {
             "seed_genres": ",".join(valid_genres[:5]),
@@ -192,7 +196,7 @@ def get_mood_based_tracks(sub_mood, language="all"):
             results = sp.recommendations(**params)
             tracks = []
             for track in results["tracks"]:
-                if track.get("preview_url"):  # Prioritize tracks with previews
+                if track.get("preview_url"):
                     tracks.append({
                         "name": track["name"],
                         "artist": track["artists"][0]["name"],
@@ -202,7 +206,7 @@ def get_mood_based_tracks(sub_mood, language="all"):
                     })
             if len(tracks) >= 5:
                 debug_log(f"Found {len(tracks)} tracks via recommendations for {sub_mood}")
-                return tracks
+                return tracks[:5]
         except Exception as e:
             debug_log(f"Recommendations failed for {sub_mood}: {str(e)}")
         
@@ -233,12 +237,12 @@ def get_mood_based_tracks(sub_mood, language="all"):
         
         if tracks:
             debug_log(f"Found {len(tracks)} tracks via search for {sub_mood}")
-            return tracks
+            return tracks[:5]
         
         debug_log(f"No tracks found for {sub_mood}, using guaranteed tracks")
         if lower_mood in GUARANTEED_TRACKS:
             tracks = [fetch_track_details(sp, t["id"], t["name"], t["artist"]) for t in GUARANTEED_TRACKS[lower_mood]]
-            return [t for t in tracks if t.get("preview_url")] or tracks
+            return [t for t in tracks if t.get("preview_url")] or tracks[:5]
         return []
     
     except Exception as e:
@@ -246,5 +250,5 @@ def get_mood_based_tracks(sub_mood, language="all"):
         st.error(f"Failed to fetch tracks for {sub_mood}. Error: {str(e)}")
         if lower_mood in GUARANTEED_TRACKS:
             tracks = [fetch_track_details(sp, t["id"], t["name"], t["artist"]) for t in GUARANTEED_TRACKS[lower_mood]]
-            return [t for t in tracks if t.get("preview_url")] or tracks
+            return [t for t in tracks if t.get("preview_url")] or tracks[:5]
         return []

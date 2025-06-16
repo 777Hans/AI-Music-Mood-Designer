@@ -1,4 +1,3 @@
-import subprocess
 import os
 import tempfile
 import requests
@@ -79,7 +78,7 @@ def add_music_to_video(video_path, scene_assignments, output_path):
         if audio_clips:
             # Handle crossfade
             for i in range(len(audio_clips) - 1):
-                if "Crossfade" in scene_assignments[i].get("effects", []):
+                if "Crossfade" in scene_assignments.get(i, {}).get("effects", []):
                     audio_clips[i] = audio_clips[i].crossfadein(2.0)
             
             final_audio = concatenate_audioclips(audio_clips)

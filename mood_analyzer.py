@@ -4,14 +4,16 @@ from torchvision.models import resnet50, ResNet50_Weights
 import numpy as np
 import cv2
 import time
+import logging
+
+logging.basicConfig(filename="debug.log", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Valid moods
 VALID_MOODS = ["Happy", "Sad", "Energetic", "Calm", "Neutral"]
 
 def debug_log(message):
     """Write debug messages to log file"""
-    with open("debug.log", "a") as f:
-        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
+    logging.debug(message)
 
 class MoodAnalyzer:
     def __init__(self):

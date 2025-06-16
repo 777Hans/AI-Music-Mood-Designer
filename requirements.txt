@@ -5,8 +5,8 @@ spotipy==2.23.0
 scenedetect==0.6.2
 ffmpeg-python==0.2.0
 python-dotenv==1.0.0
-moviepy==2.2.1
 pydub==0.25.1
+moviepy==2.0.0.dev2
 torch==2.0.0
 torchvision==0.15.0
 torchaudio==2.0.0

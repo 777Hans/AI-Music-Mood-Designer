@@ -9,6 +9,9 @@ import os
 from dotenv import load_dotenv
 import time
 import webbrowser
+import logging
+
+logging.basicConfig(filename="debug.log", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Initialize environment
 load_dotenv()
@@ -31,6 +34,7 @@ MOOD_CATEGORIES = {
 
 def display_tracks(mood, scenes, scene_assignments, language):
     """Display tracks for each mood subcategory and allow scene assignment"""
+    logging.debug(f"Displaying tracks for mood: {mood}, language: {language}")
     if mood in MOOD_CATEGORIES:
         for sub_mood in MOOD_CATEGORIES[mood]:
             with st.expander(f"🎧 {sub_mood.capitalize()} tracks"):
@@ -44,6 +48,7 @@ def display_tracks(mood, scenes, scene_assignments, language):
                                     st.audio(track["preview_url"], format="audio/mp3")
                                 except Exception as e:
                                     st.write(f"🎵 Playback error: {str(e)}")
+                                    logging.error(f"Playback error for {track['name']}: {str(e)}")
                             else:
                                 st.write("🎵 Preview not available")
                         with col2:
@@ -66,18 +71,23 @@ def display_tracks(mood, scenes, scene_assignments, language):
                                     }
                                     log_user_selection(sub_mood, track['id'], track['name'], track['artist'])
                                     st.success(f"Assigned {track['name']} to {selected_scene}")
+                                    logging.info(f"Assigned {track['name']} to Scene {scene_idx+1}")
                                 except Exception as e:
                                     st.error(f"Assignment failed: {str(e)}")
+                                    logging.error(f"Assignment failed for {track['name']}: {str(e)}")
                         with col4:
                             if st.button("Download", key=f"download_{sub_mood}_{track['id']}"):
                                 webbrowser.open(track['url'])
                                 st.info("Opened Spotify link in browser. Note: Downloading requires a Spotify Premium account or third-party tools.")
+                                logging.info(f"Opened download link for {track['name']}")
                 else:
                     st.warning(f"No tracks found for {sub_mood}. Try deleting .spotify_auth_cache and restarting the app.")
                     if st.button("Report Issue", key=f"report_{sub_mood}"):
                         st.info("Issue reported. Check debug.log for details.")
+                        logging.info(f"Issue reported for {sub_mood}")
     else:
         st.error(f"Invalid mood detected: {mood}. Please check video input or mood analyzer.")
+        logging.error(f"Invalid mood detected: {mood}")
 
 def main():
     st.title("🎵 AI Music Mood Designer")
@@ -127,6 +137,7 @@ def main():
                     "Neutral": "🎵"
                 }.get(mood, "❓")
                 st.success(f"{mood_emoji} Detected Mood: **{mood}**")
+                logging.info(f"Detected mood: {mood}")
                 
                 # Display tracks and allow scene assignment
                 display_tracks(mood, st.session_state.scenes, st.session_state.scene_assignments, language)
@@ -150,11 +161,14 @@ def main():
                                 mime="video/mp4"
                             )
                         st.success("Video rendered successfully!")
+                        logging.info(f"Video rendered to {output_path}")
                     else:
                         st.error("Failed to render video. Check debug.log for details.")
+                        logging.error("Video rendering failed")
             
         except Exception as e:
             st.error(f"Error processing video: {str(e)}")
+            logging.error(f"Video processing failed: {str(e)}")
         
         finally:
             # Clean up temp file
