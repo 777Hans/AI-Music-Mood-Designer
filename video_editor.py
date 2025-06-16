@@ -39,7 +39,7 @@ def add_music_to_video(video_path, scene_assignments, output_path):
         # Create FFmpeg input stream for video
         video_stream = ffmpeg.input(video_path)
         
-        # Prepare audio streams with trimming and crossfades
+        # Prepare audio streams with trimming and delays
         audio_streams = []
         for scene_idx, audio_info in audio_files.items():
             audio_stream = ffmpeg.input(audio_info["path"]).filter(

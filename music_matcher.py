@@ -92,7 +92,7 @@ def get_spotify_client():
             client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
             redirect_uri="http://127.0.0.1:3000/callback",
             scope="user-library-read",
-            cache_path=".spotify_cache",
+            cache_path=".spotify_auth_cache",  # Updated cache file
             show_dialog=True  # Force re-authentication if needed
         )
         sp = spotipy.Spotify(auth_manager=auth_manager)
@@ -101,7 +101,7 @@ def get_spotify_client():
         return sp
     except Exception as e:
         debug_log(f"Client init failed: {str(e)}")
-        st.error(f"Spotify connection failed: {str(e)}. Please check credentials, delete .spotify_cache, and restart the app.")
+        st.error(f"Spotify connection failed: {str(e)}. Please check credentials, delete .spotify_auth_cache, and restart the app.")
         return None
 
 @st.cache_data(ttl=3600)

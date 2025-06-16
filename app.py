@@ -29,15 +29,6 @@ MOOD_CATEGORIES = {
     "Neutral": ["ambient", "instrumental"]
 }
 
-def download_audio(url, output_path):
-    """Download audio from URL"""
-    try:
-        urllib.request.urlretrieve(url, output_path)
-        return True
-    except Exception as e:
-        st.error(f"Failed to download audio: {str(e)}")
-        return False
-
 def display_tracks(mood, scenes, scene_assignments):
     """Display tracks for each mood subcategory and allow scene assignment"""
     if mood in MOOD_CATEGORIES:
@@ -49,7 +40,10 @@ def display_tracks(mood, scenes, scene_assignments):
                         col1, col2, col3 = st.columns([1, 3, 2])
                         with col1:
                             if track["preview_url"]:
-                                st.audio(track["preview_url"], format="audio/mp3")
+                                try:
+                                    st.audio(track["preview_url"], format="audio/mp3")
+                                except Exception as e:
+                                    st.write(f"🎵 Playback error: {str(e)}")
                             else:
                                 st.write("🎵 Preview not available")
                         with col2:
