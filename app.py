@@ -8,6 +8,7 @@ import tempfile
 import os
 from dotenv import load_dotenv
 import time
+import webbrowser
 
 # Initialize environment
 load_dotenv()
@@ -28,15 +29,15 @@ MOOD_CATEGORIES = {
     "Neutral": ["ambient", "instrumental"]
 }
 
-def display_tracks(mood, scenes, scene_assignments):
+def display_tracks(mood, scenes, scene_assignments, language):
     """Display tracks for each mood subcategory and allow scene assignment"""
     if mood in MOOD_CATEGORIES:
         for sub_mood in MOOD_CATEGORIES[mood]:
             with st.expander(f"🎧 {sub_mood.capitalize()} tracks"):
-                tracks = get_mood_based_tracks(sub_mood)
+                tracks = get_mood_based_tracks(sub_mood, language)
                 if tracks:
                     for track in tracks:
-                        col1, col2, col3 = st.columns([1, 3, 2])
+                        col1, col2, col3, col4 = st.columns([1, 3, 2, 1])
                         with col1:
                             if track.get("preview_url"):
                                 try:
@@ -50,48 +51,67 @@ def display_tracks(mood, scenes, scene_assignments):
                         with col3:
                             scene_options = [f"Scene {i+1} ({s[0]:.1f}s - {s[1]:.1f}s)" for i, s in enumerate(scenes)]
                             selected_scene = st.selectbox("Assign to scene", ["None"] + scene_options, key=f"scene_{sub_mood}_{track['id']}")
+                            start_frame = st.number_input("Start frame", min_value=0, value=0, key=f"start_frame_{sub_mood}_{track['id']}")
+                            effects = st.multiselect("Effects", ["Fade In", "Fade Out", "Crossfade"], key=f"effects_{sub_mood}_{track['id']}")
                             if selected_scene != "None" and st.button("Assign", key=f"assign_{sub_mood}_{track['id']}"):
-                                scene_idx = scene_options.index(selected_scene)
-                                scene_assignments[scene_idx] = {
-                                    "track": track,
-                                    "sub_mood": sub_mood,
-                                    "start_time": scenes[scene_idx][0],
-                                    "end_time": scenes[scene_idx][1]
-                                }
-                                log_user_selection(sub_mood, track['id'], track['name'], track['artist'])
-                                st.success(f"Assigned {track['name']} to {selected_scene}")
+                                try:
+                                    scene_idx = scene_options.index(selected_scene)
+                                    scene_assignments[scene_idx] = {
+                                        "track": track,
+                                        "sub_mood": sub_mood,
+                                        "start_time": scenes[scene_idx][0],
+                                        "end_time": scenes[scene_idx][1],
+                                        "start_frame": start_frame,
+                                        "effects": effects
+                                    }
+                                    log_user_selection(sub_mood, track['id'], track['name'], track['artist'])
+                                    st.success(f"Assigned {track['name']} to {selected_scene}")
+                                except Exception as e:
+                                    st.error(f"Assignment failed: {str(e)}")
+                        with col4:
+                            if st.button("Download", key=f"download_{sub_mood}_{track['id']}"):
+                                webbrowser.open(track['url'])
+                                st.info("Opened Spotify link in browser. Note: Downloading requires a Spotify Premium account or third-party tools.")
                 else:
-                    st.warning(f"No tracks found for {sub_mood}. Try refreshing or checking Spotify credentials.")
+                    st.warning(f"No tracks found for {sub_mood}. Try deleting .spotify_auth_cache and restarting the app.")
                     if st.button("Report Issue", key=f"report_{sub_mood}"):
                         st.info("Issue reported. Check debug.log for details.")
+    else:
+        st.error(f"Invalid mood detected: {mood}. Please check video input or mood analyzer.")
 
 def main():
     st.title("🎵 AI Music Mood Designer")
     st.markdown("""
         Upload a video to analyze its mood, assign music to scenes, and export the edited video.
-        Features: AI-driven mood matching, frame-accurate music assignment, and copyright-safe options (coming soon).
+        Features: AI-driven mood matching, frame-accurate music assignment, Tamil/English songs, and audio effects.
     """)
     
-    # Initialize session state for scene assignments
+    # Initialize session state
     if "scene_assignments" not in st.session_state:
         st.session_state.scene_assignments = {}
+    if "video_path" not in st.session_state:
+        st.session_state.video_path = None
+    if "scenes" not in st.session_state:
+        st.session_state.scenes = []
+
+    # Language selection
+    language = st.selectbox("Select Language", ["All", "Tamil", "English"], key="language_select")
 
     uploaded_file = st.file_uploader("Upload a video", type=["mp4", "mov"])
 
     if uploaded_file:
-        video_path = None
         try:
             # Save uploaded file temporarily
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tfile:
                 tfile.write(uploaded_file.read())
-                video_path = tfile.name
+                st.session_state.video_path = tfile.name
 
             # Scene detection
-            scenes = split_video(video_path)
-            st.write(f"📹 Detected {len(scenes)} scenes: {', '.join([f'Scene {i+1}: {s[0]:.1f}s - {s[1]:.1f}s' for i, s in enumerate(scenes)])}")
+            st.session_state.scenes = split_video(st.session_state.video_path)
+            st.write(f"📹 Detected {len(st.session_state.scenes)} scenes: {', '.join([f'Scene {i+1}: {s[0]:.1f}s - {s[1]:.1f}s' for i, s in enumerate(st.session_state.scenes)])}")
             
-            # Mood analysis (first frame for now)
-            cap = cv2.VideoCapture(video_path)
+            # Mood analysis
+            cap = cv2.VideoCapture(st.session_state.video_path)
             ret, frame = cap.read()
             
             if ret:
@@ -105,22 +125,22 @@ def main():
                     "Energetic": "⚡",
                     "Calm": "🌿",
                     "Neutral": "🎵"
-                }.get(mood, "")
+                }.get(mood, "❓")
                 st.success(f"{mood_emoji} Detected Mood: **{mood}**")
                 
                 # Display tracks and allow scene assignment
-                display_tracks(mood, scenes, st.session_state.scene_assignments)
+                display_tracks(mood, st.session_state.scenes, st.session_state.scene_assignments, language)
                 
                 # Show assigned tracks
                 if st.session_state.scene_assignments:
                     st.subheader("Assigned Tracks")
                     for scene_idx, assignment in sorted(st.session_state.scene_assignments.items()):
-                        st.write(f"Scene {scene_idx+1} ({assignment['start_time']:.1f}s - {assignment['end_time']:.1f}s): **{assignment['track']['name']}** by {assignment['track']['artist']}")
+                        st.write(f"Scene {scene_idx+1} ({assignment['start_time']:.1f}s - {assignment['end_time']:.1f}s): **{assignment['track']['name']}** by {assignment['track']['artist']} (Frame: {assignment['start_frame']}, Effects: {', '.join(assignment['effects'])})")
                 
                 # Render and download video
                 if st.session_state.scene_assignments and st.button("Render Video"):
                     output_path = f"output_{int(time.time())}.mp4"
-                    success = add_music_to_video(video_path, st.session_state.scene_assignments, output_path)
+                    success = add_music_to_video(st.session_state.video_path, st.session_state.scene_assignments, output_path)
                     if success:
                         with open(output_path, "rb") as f:
                             st.download_button(
@@ -138,11 +158,12 @@ def main():
         
         finally:
             # Clean up temp file
-            if video_path and os.path.exists(video_path):
+            if st.session_state.video_path and os.path.exists(st.session_state.video_path):
                 try:
-                    os.unlink(video_path)
+                    os.unlink(st.session_state.video_path)
                 except PermissionError:
                     pass
+                st.session_state.video_path = None
 
 if __name__ == "__main__":
     main()

@@ -19,3 +19,133 @@ Using guaranteed tracks for instrumental
 [2025-06-16 11:23:26] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'market': 'US', 'min_valence': 0.3, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.3}
 [2025-06-16 11:23:26] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.3&min_valence=0.3&max_valence=0.5:
  None, reason: None
+[2025-06-16 11:29:33] Fetching tracks for: ambient
+[2025-06-16 11:29:33] Initializing Spotify client...
+[2025-06-16 11:29:33] Client initialized and authenticated successfully
+[2025-06-16 11:29:33] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'market': 'US', 'min_valence': 0.3, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:29:33] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.5&min_valence=0.3&max_valence=0.5:
+ None, reason: None
+[2025-06-16 11:29:34] Failed to fetch details for track 2JSpTinIqzVXeqyDHselnO: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/2JSpTinIqzVXeqyDHselnO?market=US:
+ Resource not found, reason: None
+[2025-06-16 11:29:34] Failed to fetch details for track 3iJ8GX9QYNDd6zjg8OQTaS: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/3iJ8GX9QYNDd6zjg8OQTaS?market=US:
+ Resource not found, reason: None
+[2025-06-16 11:29:34] Fetching tracks for: instrumental
+[2025-06-16 11:29:34] Fetching recommendations for genres: ['instrumental', 'classical'], params: {'seed_genres': 'instrumental,classical', 'limit': 10, 'market': 'US', 'min_valence': 0.3, 'max_valence': 0.7, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:29:34] Spotify API error for instrumental: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=i%2Cn%2Cs%2Ct%2Cr%2Cu%2Cm%2Ce%2Cn%2Ct%2Ca%2Cl%2C%2C%2Cc%2Cl%2Ca%2Cs%2Cs%2Ci%2Cc%2Ca%2Cl&min_energy=0.3&max_energy=0.5&min_valence=0.3&max_valence=0.7:
+ None, reason: None
+[2025-06-16 11:29:34] Failed to fetch details for track 6PZYj3Z3wJ8Hl4VYfz4i5x: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/6PZYj3Z3wJ8Hl4VYfz4i5x?market=US:
+ Resource not found, reason: None
+[2025-06-16 11:29:35] Failed to fetch details for track 3W3qGw1KfKDVQ2XkAZZ5f2: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/3W3qGw1KfKDVQ2XkAZZ5f2?market=US:
+ Resource not found, reason: None
+[2025-06-16 11:38:15] Fetching tracks for: ambient
+[2025-06-16 11:38:15] Initializing Spotify client...
+[2025-06-16 11:38:22] Client initialized and authenticated successfully
+[2025-06-16 11:38:22] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'min_valence': 0.1, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:38:23] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.5&min_valence=0.1&max_valence=0.5:
+ None, reason: None
+[2025-06-16 11:38:23] Error fetching track 7wB76lUB0dWnp2H8V3qS0Q: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/7wB76lUB0dWnp2H8V3qS0Q:
+ Resource not found, reason: None
+[2025-06-16 11:38:23] Error fetching track 1YfEmu3uF4zQvHPhM6nLML: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/1YfEmu3uF4zQvHPhM6nLML:
+ Resource not found, reason: None
+[2025-06-16 11:38:23] Fetching tracks for: instrumental
+[2025-06-16 11:38:23] Fetching recommendations for genres: ['instrumental', 'classical'], params: {'seed_genres': 'instrumental,classical', 'limit': 10, 'min_valence': 0.3, 'max_valence': 0.7, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:38:23] Spotify API error for instrumental: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=i%2Cn%2Cs%2Ct%2Cr%2Cu%2Cm%2Ce%2Cn%2Ct%2Ca%2Cl%2C%2C%2Cc%2Cl%2Ca%2Cs%2Cs%2Ci%2Cc%2Ca%2Cl&min_energy=0.3&max_energy=0.5&min_valence=0.3&max_valence=0.7:
+ None, reason: None
+[2025-06-16 11:38:23] Error fetching track 5aO7j4ZZr7v0kKPLh5h5GY: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/5aO7j4ZZr7v0kKPLh5h5GY:
+ Resource not found, reason: None
+[2025-06-16 11:38:24] Error fetching track 6b7iRh5b3zH7kH8qLUK47x: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/6b7iRh5b3zH7kH8qLUK47x:
+ Resource not found, reason: None
+[2025-06-16 11:46:25] Fetching tracks for: ambient
+[2025-06-16 11:46:25] Initializing Spotify client...
+[2025-06-16 11:46:26] Client initialized and authenticated successfully
+[2025-06-16 11:46:26] Fetching recommendations for genres: ['ambient', 'chill'], params: {'seed_genres': 'ambient,chill', 'limit': 10, 'min_valence': 0.1, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:46:26] Spotify API error for ambient: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cc%2Ch%2Ci%2Cl%2Cl&min_energy=0.3&max_energy=0.5&min_valence=0.1&max_valence=0.5:
+ None, reason: None
+[2025-06-16 11:46:26] Error fetching track 3Z3qBXXTB82TUCzWudKQD7: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/3Z3qBXXTB82TUCzWudKQD7:
+ Resource not found, reason: None
+[2025-06-16 11:46:27] Error fetching track 5Qz0yO4jJecjrhfSJU2Y0G: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/5Qz0yO4jJecjrhfSJU2Y0G:
+ Resource not found, reason: None
+[2025-06-16 11:46:27] Fetching tracks for: instrumental
+[2025-06-16 11:46:27] Fetching recommendations for genres: ['classical', 'piano'], params: {'seed_genres': 'classical,piano', 'limit': 10, 'min_valence': 0.3, 'max_valence': 0.7, 'min_energy': 0.3, 'max_energy': 0.5}
+[2025-06-16 11:46:27] Spotify API error for instrumental: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=c%2Cl%2Ca%2Cs%2Cs%2Ci%2Cc%2Ca%2Cl%2C%2C%2Cp%2Ci%2Ca%2Cn%2Co&min_energy=0.3&max_energy=0.5&min_valence=0.3&max_valence=0.7:
+ None, reason: None
+[2025-06-16 11:46:27] Error fetching track 1fL4uHaDIrwCkSwDxi5D8M: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/1fL4uHaDIrwCkSwDxi5D8M:
+ Resource not found, reason: None
+[2025-06-16 11:46:28] Error fetching track 2Xz8nB3S5z5b2V6z3j1k0f: http status: 404, code:-1 - https://api.spotify.com/v1/tracks/2Xz8nB3S5z5b2V6z3j1k0f:
+ Resource not found, reason: None
+[2025-06-16 12:38:57] Initializing MoodAnalyzer...
+[2025-06-16 12:39:16] MoodAnalyzer initialized successfully
+[2025-06-16 12:39:16] Frame preprocessed successfully
+[2025-06-16 12:39:16] Predicted mood: Happy (confidence: 0.24)
+[2025-06-16 12:39:16] Final mood for frame: Happy
+[2025-06-16 12:39:17] Fetching tracks for: joyful
+[2025-06-16 12:39:17] Initializing Spotify client...
+[2025-06-16 12:39:17] Client initialized and authenticated successfully
+[2025-06-16 12:39:17] Fetching recommendations for genres: ['pop', 'dance-pop'], params: {'seed_genres': 'pop,dance-pop', 'limit': 10, 'min_valence': 0.7, 'max_valence': 0.7, 'min_energy': 0.6, 'max_energy': 0.7}
+[2025-06-16 12:39:18] Recommendations failed for joyful: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=p%2Co%2Cp%2C%2C%2Cd%2Ca%2Cn%2Cc%2Ce%2C-%2Cp%2Co%2Cp&min_energy=0.6&max_energy=0.7&min_valence=0.7&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:39:18] Falling back to search for joyful
+[2025-06-16 12:39:18] Found 5 tracks via search for joyful
+[2025-06-16 12:39:18] Fetching tracks for: celebratory
+[2025-06-16 12:39:19] Fetching recommendations for genres: ['dance-pop', 'party'], params: {'seed_genres': 'dance-pop,party', 'limit': 10, 'min_valence': 0.8, 'max_valence': 0.7, 'min_energy': 0.7, 'max_energy': 0.7}
+[2025-06-16 12:39:19] Recommendations failed for celebratory: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=d%2Ca%2Cn%2Cc%2Ce%2C-%2Cp%2Co%2Cp%2C%2C%2Cp%2Ca%2Cr%2Ct%2Cy&min_energy=0.7&max_energy=0.7&min_valence=0.8&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:39:19] Falling back to search for celebratory
+[2025-06-16 12:39:19] Found 5 tracks via search for celebratory
+[2025-06-16 12:39:19] Fetching tracks for: upbeat
+[2025-06-16 12:39:19] Fetching recommendations for genres: ['pop', 'dance-pop'], params: {'seed_genres': 'pop,dance-pop', 'limit': 10, 'min_valence': 0.7, 'max_valence': 0.7, 'min_energy': 0.8, 'max_energy': 0.7}
+[2025-06-16 12:39:19] Recommendations failed for upbeat: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=p%2Co%2Cp%2C%2C%2Cd%2Ca%2Cn%2Cc%2Ce%2C-%2Cp%2Co%2Cp&min_energy=0.8&max_energy=0.7&min_valence=0.7&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:39:19] Falling back to search for upbeat
+[2025-06-16 12:39:20] Found 5 tracks via search for upbeat
+[2025-06-16 12:40:36] Initializing MoodAnalyzer...
+[2025-06-16 12:40:37] MoodAnalyzer initialized successfully
+[2025-06-16 12:40:37] Frame preprocessed successfully
+[2025-06-16 12:40:37] Predicted mood: Calm (confidence: 0.31)
+[2025-06-16 12:40:37] Final mood for frame: Calm
+[2025-06-16 12:40:37] Fetching tracks for: peaceful
+[2025-06-16 12:40:37] Fetching recommendations for genres: ['chill', 'acoustic'], params: {'seed_genres': 'chill,acoustic', 'limit': 10, 'min_valence': 0.1, 'max_valence': 0.6, 'min_energy': 0.3, 'max_energy': 0.4}
+[2025-06-16 12:40:37] Recommendations failed for peaceful: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=c%2Ch%2Ci%2Cl%2Cl%2C%2C%2Ca%2Cc%2Co%2Cu%2Cs%2Ct%2Ci%2Cc&min_energy=0.3&max_energy=0.4&min_valence=0.1&max_valence=0.6:
+ None, reason: None
+[2025-06-16 12:40:37] Falling back to search for peaceful
+[2025-06-16 12:40:38] Found 5 tracks via search for peaceful
+[2025-06-16 12:40:38] Fetching tracks for: meditative
+[2025-06-16 12:40:38] Fetching recommendations for genres: ['ambient', 'new-age'], params: {'seed_genres': 'ambient,new-age', 'limit': 10, 'min_valence': 0.3, 'max_valence': 0.5, 'min_energy': 0.3, 'max_energy': 0.3}
+[2025-06-16 12:40:38] Recommendations failed for meditative: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=a%2Cm%2Cb%2Ci%2Ce%2Cn%2Ct%2C%2C%2Cn%2Ce%2Cw%2C-%2Ca%2Cg%2Ce&min_energy=0.3&max_energy=0.3&min_valence=0.3&max_valence=0.5:
+ None, reason: None
+[2025-06-16 12:40:38] Falling back to search for meditative
+[2025-06-16 12:40:39] Found 5 tracks via search for meditative
+[2025-06-16 12:40:39] Fetching tracks for: dreamy
+[2025-06-16 12:40:39] Fetching recommendations for genres: ['dream-pop', 'shoegaze'], params: {'seed_genres': 'dream-pop,shoegaze', 'limit': 10, 'min_valence': 0.4, 'max_valence': 0.6, 'min_energy': 0.3, 'max_energy': 0.6}
+[2025-06-16 12:40:39] Recommendations failed for dreamy: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=d%2Cr%2Ce%2Ca%2Cm%2C-%2Cp%2Co%2Cp%2C%2C%2Cs%2Ch%2Co%2Ce%2Cg%2Ca%2Cz%2Ce&min_energy=0.3&max_energy=0.6&min_valence=0.4&max_valence=0.6:
+ None, reason: None
+[2025-06-16 12:40:39] Falling back to search for dreamy
+[2025-06-16 12:40:40] Found 5 tracks via search for dreamy
+[2025-06-16 12:41:08] Initializing MoodAnalyzer...
+[2025-06-16 12:41:09] MoodAnalyzer initialized successfully
+[2025-06-16 12:41:09] Frame preprocessed successfully
+[2025-06-16 12:41:09] Predicted mood: Happy (confidence: 0.35)
+[2025-06-16 12:41:09] Final mood for frame: Happy
+[2025-06-16 12:41:40] Initializing MoodAnalyzer...
+[2025-06-16 12:41:41] MoodAnalyzer initialized successfully
+[2025-06-16 12:41:41] Frame preprocessed successfully
+[2025-06-16 12:41:41] Predicted mood: Energetic (confidence: 0.35)
+[2025-06-16 12:41:41] Final mood for frame: Energetic
+[2025-06-16 12:41:41] Fetching tracks for: intense
+[2025-06-16 12:41:41] Fetching recommendations for genres: ['edm', 'industrial'], params: {'seed_genres': 'edm,industrial', 'limit': 10, 'min_valence': 0.5, 'max_valence': 0.7, 'min_energy': 0.8, 'max_energy': 0.7}
+[2025-06-16 12:41:41] Recommendations failed for intense: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=e%2Cd%2Cm%2C%2C%2Ci%2Cn%2Cd%2Cu%2Cs%2Ct%2Cr%2Ci%2Ca%2Cl&min_energy=0.8&max_energy=0.7&min_valence=0.5&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:41:41] Falling back to search for intense
+[2025-06-16 12:41:42] Found 5 tracks via search for intense
+[2025-06-16 12:41:42] Fetching tracks for: powerful
+[2025-06-16 12:41:42] Fetching recommendations for genres: ['rock', 'epic'], params: {'seed_genres': 'rock,epic', 'limit': 10, 'min_valence': 0.4, 'max_valence': 0.7, 'min_energy': 0.7, 'max_energy': 0.7}
+[2025-06-16 12:41:42] Recommendations failed for powerful: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=r%2Co%2Cc%2Ck%2C%2C%2Ce%2Cp%2Ci%2Cc&min_energy=0.7&max_energy=0.7&min_valence=0.4&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:41:42] Falling back to search for powerful
+[2025-06-16 12:41:42] Found 5 tracks via search for powerful
+[2025-06-16 12:41:43] Fetching tracks for: adrenaline
+[2025-06-16 12:41:43] Fetching recommendations for genres: ['electronic', 'drum-and-bass'], params: {'seed_genres': 'electronic,drum-and-bass', 'limit': 10, 'min_valence': 0.5, 'max_valence': 0.7, 'min_energy': 0.9, 'max_energy': 0.7}
+[2025-06-16 12:41:43] Recommendations failed for adrenaline: http status: 404, code:-1 - https://api.spotify.com/v1/recommendations?limit=10&seed_genres=e%2Cl%2Ce%2Cc%2Ct%2Cr%2Co%2Cn%2Ci%2Cc%2C%2C%2Cd%2Cr%2Cu%2Cm%2C-%2Ca%2Cn%2Cd%2C-%2Cb%2Ca%2Cs%2Cs&min_energy=0.9&max_energy=0.7&min_valence=0.5&max_valence=0.7:
+ None, reason: None
+[2025-06-16 12:41:43] Falling back to search for adrenaline
+[2025-06-16 12:41:44] Found 5 tracks via search for adrenaline
