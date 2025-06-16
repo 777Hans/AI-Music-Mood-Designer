@@ -12,7 +12,7 @@ load_dotenv()
 MOOD_TO_GENRE = {
     "joyful": {"genres": ["pop", "dance pop"], "min_valence": 0.7, "min_energy": 0.6},
     "celebratory": {"genres": ["dance pop", "party"], "min_valence": 0.8, "min_energy": 0.7},
-    "upbeat": {"genres": ["upbeat pop", "pop"], "min_valence": 0.7, "min_energy": 0.8},
+    "upbeat": {"genres": ["pop", "upbeat pop"], "min_valence": 0.7, "min_energy": 0.8},
     "melancholic": {"genres": ["sad pop", "indie"], "min_valence": 0.0, "max_valence": 0.4, "max_energy": 0.5},
     "heartbreak": {"genres": ["sad", "ballad"], "min_valence": 0.0, "max_valence": 0.3, "max_energy": 0.4},
     "reflective": {"genres": ["ambient", "folk"], "min_valence": 0.2, "max_valence": 0.5, "max_energy": 0.4},
@@ -26,10 +26,10 @@ MOOD_TO_GENRE = {
     "instrumental": {"genres": ["instrumental", "classical"], "min_valence": 0.3, "max_valence": 0.7, "max_energy": 0.5}
 }
 
-# Fallback genres if no tracks found
+# Fallback genres for broader search
 FALLBACK_GENRES = ["pop", "chill", "rock", "electronic"]
 
-# Pre-verified tracks (expanded for more moods)
+# Hardcoded tracks as last resort
 GUARANTEED_TRACKS = {
     "ambient": [
         {"id": "2JSpTinIqzVXeqyDHselnO", "name": "Stars", "artist": "Hans Zimmer"},
@@ -92,7 +92,8 @@ def get_spotify_client():
             client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
             redirect_uri="http://127.0.0.1:3000/callback",
             scope="user-library-read",
-            cache_path=".spotify_cache"
+            cache_path=".spotify_cache",
+            show_dialog=True  # Force re-authentication if needed
         )
         sp = spotipy.Spotify(auth_manager=auth_manager)
         sp.current_user()  # Test authentication
@@ -100,7 +101,7 @@ def get_spotify_client():
         return sp
     except Exception as e:
         debug_log(f"Client init failed: {str(e)}")
-        st.error(f"Spotify connection failed: {str(e)}. Please check credentials or restart the app.")
+        st.error(f"Spotify connection failed: {str(e)}. Please check credentials, delete .spotify_cache, and restart the app.")
         return None
 
 @st.cache_data(ttl=3600)
@@ -110,33 +111,19 @@ def get_mood_based_tracks(sub_mood):
     
     lower_mood = sub_mood.lower()
     
-    # Return hardcoded results if available
-    if lower_mood in GUARANTEED_TRACKS:
-        debug_log(f"Using guaranteed tracks for {lower_mood}")
-        return [
-            {
-                "name": track["name"],
-                "artist": track["artist"],
-                "preview_url": f"https://p.scdn.co/mp3-preview/{track['id']}",
-                "url": f"https://open.spotify.com/track/{track['id']}",
-                "id": track["id"]
-            }
-            for track in GUARANTEED_TRACKS[lower_mood]
-        ]
-    
-    # Fallback to API search
+    # Try Spotify recommendations first
     try:
         sp = get_spotify_client()
         if not sp:
-            debug_log("Spotify client not initialized")
-            return []
+            debug_log("Spotify client not initialized, falling back to guaranteed tracks")
+            return GUARANTEED_TRACKS.get(lower_mood, [])
         
         # Get genre and audio features for mood
         mood_config = MOOD_TO_GENRE.get(lower_mood, {"genres": FALLBACK_GENRES, "min_valence": 0.3, "max_valence": 0.7, "min_energy": 0.3})
         genres = mood_config.get("genres", FALLBACK_GENRES)
         params = {
-            "seed_genres": ",".join(genres[:5]),  # Spotify allows up to 5 seed genres
-            "limit": 10,  # Higher limit for diverse results
+            "seed_genres": ",".join(genres[:5]),
+            "limit": 10,  # Fetch more tracks for diversity
             "market": "US",
             "min_valence": mood_config.get("min_valence", 0.3),
             "max_valence": mood_config.get("max_valence", 0.7),
@@ -156,40 +143,41 @@ def get_mood_based_tracks(sub_mood):
                 "url": track['external_urls']['spotify'],
                 "id": track['id']
             })
-            if len(tracks) >= 5:  # Return up to 5 tracks
+        
+        if len(tracks) >= 5:
+            debug_log(f"Found {len(tracks)} tracks via recommendations for {sub_mood}")
+            return tracks
+        
+        # Fallback to search if recommendations yield too few tracks
+        debug_log(f"Insufficient tracks from recommendations, falling back to search for {sub_mood}")
+        for genre in genres + FALLBACK_GENRES:
+            results = sp.search(
+                q=f"genre:\"{genre}\" year:2020-2024",
+                limit=10,
+                type="track",
+                market="US"
+            )
+            for track in results['tracks']['items']:
+                tracks.append({
+                    "name": track['name'],
+                    "artist": track['artists'][0]['name'],
+                    "preview_url": track.get('preview_url'),
+                    "url": track['external_urls']['spotify'],
+                    "id": track['id']
+                })
+                if len(tracks) >= 5:
+                    break
+            if len(tracks) >= 5:
                 break
         
-        if not tracks:
-            debug_log(f"No tracks found for genres: {genres}. Falling back to search.")
-            # Fallback to search API
-            for genre in genres:
-                results = sp.search(
-                    q=f"genre:\"{genre}\" year:2020-2024",
-                    limit=10,
-                    type="track",
-                    market="US"
-                )
-                for track in results['tracks']['items']:
-                    tracks.append({
-                        "name": track['name'],
-                        "artist": track['artists'][0]['name'],
-                        "preview_url": track.get('preview_url'),
-                        "url": track['external_urls']['spotify'],
-                        "id": track['id']
-                    })
-                    if len(tracks) >= 5:
-                        break
-                if tracks:
-                    break
+        if tracks:
+            debug_log(f"Found {len(tracks)} tracks via search for {sub_mood}")
+            return tracks
         
-        if not tracks:
-            debug_log(f"No tracks found after fallback for {sub_mood}")
-            return []
-        
-        debug_log(f"Found {len(tracks)} tracks for {sub_mood}")
-        return tracks
+        debug_log(f"No tracks found for {sub_mood}, using guaranteed tracks")
+        return GUARANTEED_TRACKS.get(lower_mood, [])
     
     except Exception as e:
         debug_log(f"Spotify API error for {sub_mood}: {str(e)}")
         st.error(f"Failed to fetch tracks for {sub_mood}. Error: {str(e)}")
-        return []
+        return GUARANTEED_TRACKS.get(lower_mood, [])
