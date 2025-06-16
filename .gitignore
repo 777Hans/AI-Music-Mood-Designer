@@ -39,3 +39,4 @@ Thumbs.db
 .spotify_cache
 .cache
 *.cache
+.spotify_auth_cache
