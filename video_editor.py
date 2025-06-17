@@ -1,104 +1,99 @@
+# video_editor.py
 import os
 import tempfile
-import requests
-from pydub import AudioSegment
-from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips
 import logging
+from pydub import AudioSegment
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+from music_matcher import download_youtube_audio
 
 logging.basicConfig(filename="debug.log", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def download_audio(url, output_path):
-    """Download audio from URL"""
+def apply_audio_effects(audio_path, output_path, effects_list, duration_ms):
     try:
-        response = requests.get(url, stream=True)
-        if response.status_code == 200:
-            with open(output_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            logging.info(f"Downloaded audio to {output_path}")
-            return True
-        else:
-            logging.error(f"Failed to download audio from {url}, status code: {response.status_code}")
+        try:
+            audio = AudioSegment.from_file(audio_path)
+        except Exception as e:
+            logging.error(f"Pydub failed to read audio: {e}")
             return False
-    except Exception as e:
-        logging.error(f"Error downloading audio from {url}: {str(e)}")
-        return False
 
-def apply_audio_effects(audio_path, output_path, effects, duration_ms):
-    """Apply audio effects using pydub"""
-    try:
-        audio = AudioSegment.from_file(audio_path)
-        if "Fade In" in effects:
-            audio = audio.fade_in(2000)  # 2-second fade-in
-        if "Fade Out" in effects:
-            audio = audio.fade_out(2000)  # 2-second fade-out
-        audio = audio[:duration_ms]  # Trim to required duration
+        if "Fade In" in effects_list:
+            audio = audio.fade_in(2000)
+        if "Fade Out" in effects_list:
+            audio = audio.fade_out(2000)
+        if "Reverse" in effects_list:
+            audio = audio.reverse()
+        if "Echo" in effects_list:
+            audio = audio + audio - 6
+        if "Volume Ramp Up" in effects_list:
+            audio = audio.fade(from_gain=-15.0, start=0, duration=duration_ms)
+        if "Volume Ramp Down" in effects_list:
+            audio = audio.fade(to_gain=-15.0, start=0, duration=duration_ms)
+        if "Pitch Shift Up" in effects_list:
+            audio = audio._spawn(audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * 1.1)}).set_frame_rate(audio.frame_rate)
+        if "Pitch Shift Down" in effects_list:
+            audio = audio._spawn(audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * 0.9)}).set_frame_rate(audio.frame_rate)
+
+        audio = audio[:duration_ms]
         audio.export(output_path, format="mp3")
-        logging.info(f"Applied effects {effects} to {output_path}")
-        return True
+        return os.path.exists(output_path)
+
     except Exception as e:
-        logging.error(f"Error applying effects to {audio_path}: {str(e)}")
+        logging.error(f"Audio processing failed: {str(e)}")
         return False
 
 def add_music_to_video(video_path, scene_assignments, output_path):
-    """Add music to video with frame-accurate placement and effects"""
     try:
         video = VideoFileClip(video_path)
-        fps = video.fps
         audio_clips = []
-        temp_files = []
 
-        for scene_idx, assignment in sorted(scene_assignments.items()):
+        for idx, assignment in sorted(scene_assignments.items()):
+            start = assignment["start_time"]
+            end = assignment["end_time"]
+            duration = int((end - start) * 1000)
             track = assignment["track"]
-            start_time = assignment["start_time"]
-            end_time = assignment["end_time"]
-            start_frame = assignment["start_frame"]
             effects = assignment.get("effects", [])
-            
-            # Convert start_frame to seconds
-            start_offset = start_frame / fps if start_frame else 0
-            duration = (end_time - start_time) * 1000  # Duration in ms
-            
-            if track.get("preview_url"):
-                temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                if download_audio(track["preview_url"], temp_audio):
-                    temp_processed = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                    if apply_audio_effects(temp_audio, temp_processed, effects, duration):
-                        audio_clip = AudioFileClip(temp_processed)
-                        audio_clip = audio_clip.set_start(start_time + start_offset)
-                        audio_clips.append(audio_clip)
-                        temp_files.extend([temp_audio, temp_processed])
-                    else:
-                        logging.error(f"Failed to process audio for track {track['name']}")
-                else:
-                    logging.error(f"Failed to download audio for track {track['name']}")
-            else:
-                logging.warning(f"No preview URL for track {track['name']}")
 
-        if audio_clips:
-            # Handle crossfade
-            for i in range(len(audio_clips) - 1):
-                if "Crossfade" in scene_assignments.get(i, {}).get("effects", []):
-                    audio_clips[i] = audio_clips[i].crossfadein(2.0)
-            
-            final_audio = concatenate_audioclips(audio_clips)
-            final_video = video.set_audio(final_audio)
-            final_video.write_videofile(output_path, codec="libx264", audio_codec="aac")
-            logging.info(f"Video rendered successfully to {output_path}")
-            
-            # Clean up
-            video.close()
-            for clip in audio_clips:
-                clip.close()
-            for temp_file in temp_files:
-                if os.path.exists(temp_file):
-                    os.unlink(temp_file)
-            
-            return True
-        else:
-            logging.error("No audio clips to add to video")
+            raw_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+            processed_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+
+            success = False
+            if track["source"] == "youtube":
+                success = download_youtube_audio(track["audio_url"], raw_path)
+                if not success:
+                    logging.warning(f"Skipping scene {idx+1}: failed to download {track['name']}")
+                    continue
+            elif track["source"] == "local":
+                try:
+                    local_audio = AudioSegment.from_file(track["path"])
+                    local_audio.export(raw_path, format="mp3")
+                    success = True
+                except Exception as e:
+                    logging.warning(f"Skipping scene {idx+1}: failed to re-encode local audio: {e}")
+                    continue
+
+            if not success:
+                continue
+
+            effect_success = apply_audio_effects(raw_path, processed_path, effects, duration)
+            if not effect_success:
+                logging.warning(f"Skipping scene {idx+1}: failed to apply effects to {track['name']}")
+                continue
+
+            try:
+                audio_clip = AudioFileClip(processed_path).set_start(start)
+                audio_clips.append(audio_clip)
+            except Exception as e:
+                logging.warning(f"Skipping scene {idx+1}: MoviePy couldn't load audio - {str(e)}")
+
+        if not audio_clips:
+            logging.error("No audio clips were successfully created.")
             return False
-    
+
+        final_audio = CompositeAudioClip(audio_clips)
+        final_video = video.set_audio(final_audio)
+        final_video.write_videofile(output_path, codec="libx264", audio_codec="aac")
+        return True
+
     except Exception as e:
-        logging.error(f"Error rendering video: {str(e)}")
+        logging.error(f"Rendering failed: {str(e)}")
         return False
