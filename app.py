@@ -1,4 +1,4 @@
-# app.py - Enhanced Version
+# app.py - Enhanced Version with Music Duration Display
 import streamlit as st
 from mood_analyzer import analyze_mood
 from music_matcher import search_youtube_tracks, get_preferred_track_name, log_user_selection
@@ -11,6 +11,7 @@ import logging
 import json
 import uuid
 import webbrowser
+from pydub import AudioSegment
 
 logging.basicConfig(filename="debug.log", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -81,6 +82,15 @@ MOOD_SONG_RECOMMENDATIONS = {
     }
 }
 
+def get_audio_duration(audio_path):
+    """Get audio duration in seconds"""
+    try:
+        audio = AudioSegment.from_file(audio_path)
+        return len(audio) / 1000.0  # Convert ms to seconds
+    except Exception as e:
+        logging.error(f"Failed to get audio duration: {e}")
+        return 0
+
 def initialize_state():
     # Initialize dictionary-type session state variables
     dict_keys = ["segments", "assignments", "track_cache", "local_tracks", "track_map", "track_selection", "manual_segments"]
@@ -112,6 +122,10 @@ def format_time(seconds):
     minutes = int(seconds // 60)
     secs = int(seconds % 60)
     return f"{minutes:02d}:{secs:02d}"
+
+def time_to_seconds(minutes, seconds):
+    """Convert MM:SS to total seconds"""
+    return minutes * 60 + seconds
 
 def video_upload_tab():
     st.header("1. Upload and Analyze Video")
@@ -179,12 +193,17 @@ def music_tab():
                 path = os.path.join(tempfile.gettempdir(), f"{track_id}_{track.name}")
                 with open(path, "wb") as f:
                     f.write(track.read())
+                
+                # Get audio duration
+                audio_duration = get_audio_duration(path)
+                
                 st.session_state.local_tracks[track_id] = {
                     "id": track_id,
                     "name": track.name,
                     "artist": "Local File",
                     "path": path,
-                    "source": "local"
+                    "source": "local",
+                    "duration": audio_duration
                 }
 
     main_mood = st.session_state.main_mood
@@ -232,80 +251,115 @@ def manual_assignment_interface(all_tracks_map):
         return
     
     duration = st.session_state.video_duration
-    st.write(f"Video Duration: {format_time(duration)}")
+    st.write(f"**Video Duration: {format_time(duration)}**")
     
     # Add new segment
     st.write("**Add New Music Segment:**")
-    col1, col2, col3 = st.columns([2, 2, 1])
     
+    # Video timing section
+    st.markdown("##### 📹 Video Section Timing")
+    col1, col2 = st.columns(2)
     with col1:
-        start_time = st.number_input("Start Time (seconds)", min_value=0.0, max_value=duration, value=0.0, step=0.1, key="new_start")
+        st.write("**Video Start Time:**")
+        v_start_min = st.number_input("Minutes", min_value=0, max_value=int(duration//60), value=0, key="v_start_min")
+        v_start_sec = st.number_input("Seconds", min_value=0, max_value=59, value=0, key="v_start_sec")
     with col2:
-        end_time = st.number_input("End Time (seconds)", min_value=start_time, max_value=duration, value=min(start_time + 10, duration), step=0.1, key="new_end")
+        st.write("**Video End Time:**")
+        v_end_min = st.number_input("Minutes", min_value=0, max_value=int(duration//60), value=0, key="v_end_min")
+        v_end_sec = st.number_input("Seconds", min_value=0, max_value=59, value=10, key="v_end_sec")
+    
+    # Music selection and timing section
+    st.markdown("##### 🎵 Music Selection & Timing")
+    
+    # Track selection
+    track_options = list(all_tracks_map.keys())
+    selected_track_id = st.selectbox(
+        "Select Music Track:",
+        options=track_options,
+        format_func=lambda tid: f"{all_tracks_map[tid]['name']} ({format_time(all_tracks_map[tid].get('duration', 0))})",
+        key="manual_track_select"
+    )
+    
+    # Show selected track duration
+    if selected_track_id:
+        track_duration = all_tracks_map[selected_track_id].get('duration', 0)
+        st.info(f"Selected track duration: {format_time(track_duration)}")
+    
+    col3, col4 = st.columns(2)
     with col3:
-        if st.button("Add Segment", key="add_segment"):
+        st.write("**Music Start Time:**")
+        m_start_min = st.number_input("Minutes", min_value=0, max_value=59, value=0, key="m_start_min")
+        m_start_sec = st.number_input("Seconds", min_value=0, max_value=59, value=0, key="m_start_sec")
+    with col4:
+        st.write("**Music End Time:** (Leave 00:00 for auto)")
+        m_end_min = st.number_input("Minutes", min_value=0, max_value=59, value=0, key="m_end_min")
+        m_end_sec = st.number_input("Seconds", min_value=0, max_value=59, value=0, key="m_end_sec")
+    
+    # Effects
+    effects = st.multiselect(
+        "Audio Effects:",
+        ["Fade In", "Fade Out", "Reverse", "Echo", "Volume Ramp Up", "Volume Ramp Down", "Pitch Shift Up", "Pitch Shift Down"],
+        key="manual_effects"
+    )
+    
+    if st.button("Add Segment", key="add_segment"):
+        v_start_time = time_to_seconds(v_start_min, v_start_sec)
+        v_end_time = time_to_seconds(v_end_min, v_end_sec)
+        m_start_time = time_to_seconds(m_start_min, m_start_sec)
+        m_end_time = time_to_seconds(m_end_min, m_end_sec)
+        
+        # Auto-calculate music end time if not specified
+        if m_end_time == 0:
+            m_end_time = m_start_time + (v_end_time - v_start_time)
+        
+        if v_start_time < v_end_time and m_start_time < m_end_time:
             segment_id = len(st.session_state.manual_segments)
             st.session_state.manual_segments[segment_id] = {
-                "start_time": start_time,
-                "end_time": end_time,
-                "track": None,
-                "effects": []
+                "start_time": v_start_time,
+                "end_time": v_end_time,
+                "music_start": m_start_time,
+                "music_end": m_end_time,
+                "track": all_tracks_map[selected_track_id],
+                "effects": effects
             }
-            st.success(f"Added segment: {format_time(start_time)} - {format_time(end_time)}")
+            st.success(f"Added segment: Video {format_time(v_start_time)}-{format_time(v_end_time)}, Music {format_time(m_start_time)}-{format_time(m_end_time)}")
             st.rerun()
+        else:
+            st.error("Invalid time ranges. End times must be greater than start times.")
 
-    # Display and edit existing segments
+    # Display existing segments
     if st.session_state.manual_segments:
         st.write("**Your Music Segments:**")
         
         segments_to_remove = []
         for segment_id, segment in st.session_state.manual_segments.items():
             with st.container():
-                st.markdown(f"### Segment {segment_id + 1}: {format_time(segment['start_time'])} - {format_time(segment['end_time'])}")
+                st.markdown(f"### Segment {segment_id + 1}")
                 
-                col1, col2, col3 = st.columns([3, 2, 1])
+                col1, col2, col3 = st.columns([3, 3, 1])
                 
                 with col1:
-                    # Track selection
-                    current_track_id = segment.get("track", {}).get("id") if segment.get("track") else None
-                    track_options = list(all_tracks_map.keys())
-                    
-                    if current_track_id and current_track_id in all_tracks_map:
-                        default_index = track_options.index(current_track_id)
-                    else:
-                        default_index = 0
-                    
-                    selected_track_id = st.selectbox(
-                        f"Select track for segment {segment_id + 1}",
-                        options=track_options,
-                        format_func=lambda tid: all_tracks_map[tid]["name"],
-                        key=f"manual_track_{segment_id}",
-                        index=default_index
-                    )
-                    
-                    # Update segment with selected track
-                    st.session_state.manual_segments[segment_id]["track"] = all_tracks_map[selected_track_id]
+                    st.write(f"**📹 Video:** {format_time(segment['start_time'])} - {format_time(segment['end_time'])}")
+                    st.write(f"**Duration:** {format_time(segment['end_time'] - segment['start_time'])}")
                 
                 with col2:
-                    # Effects selection
-                    effects = st.multiselect(
-                        f"Effects for segment {segment_id + 1}",
-                        ["Fade In", "Fade Out", "Reverse", "Echo", "Volume Ramp Up", "Volume Ramp Down", "Pitch Shift Up", "Pitch Shift Down"],
-                        default=segment.get("effects", []),
-                        key=f"manual_effects_{segment_id}"
-                    )
-                    st.session_state.manual_segments[segment_id]["effects"] = effects
+                    track_name = segment["track"]["name"]
+                    track_duration = segment["track"].get("duration", 0)
+                    st.write(f"**🎵 Track:** {track_name} ({format_time(track_duration)})")
+                    st.write(f"**Music:** {format_time(segment['music_start'])} - {format_time(segment['music_end'])}")
+                    if segment.get("effects"):
+                        st.write(f"**Effects:** {', '.join(segment['effects'])}")
                 
                 with col3:
                     if st.button(f"Remove", key=f"remove_{segment_id}"):
                         segments_to_remove.append(segment_id)
         
-        # Remove segments that were marked for removal
+        # Remove segments
         for segment_id in segments_to_remove:
             del st.session_state.manual_segments[segment_id]
             st.rerun()
         
-        # Copy manual segments to assignments for rendering
+        # Copy manual segments to assignments
         st.session_state.assignments = dict(st.session_state.manual_segments)
     
     else:
@@ -314,51 +368,79 @@ def manual_assignment_interface(all_tracks_map):
 def automatic_assignment_interface(all_tracks_map, sub_mood):
     st.subheader("🤖 Automatic Scene Assignment")
     
-    # Check if we have segments
     if not st.session_state.segments:
         st.warning("No video segments detected. Please upload and analyze a video first.")
         return
         
     for i, (start, end) in enumerate(st.session_state.segments):
         st.markdown(f"### Scene {i+1} - {format_time(start)} to {format_time(end)}")
+        scene_duration = end - start
+        
+        col1, col2, col3 = st.columns([3, 3, 2])
 
-        # Get the current selection from session state or use first track as default
-        current_selection = st.session_state.track_selection.get(i)
-        if current_selection is None or current_selection not in all_tracks_map:
-            current_selection = list(all_tracks_map.keys())[0]
-            st.session_state.track_selection[i] = current_selection
+        with col1:
+            # Track selection with duration display
+            current_selection = st.session_state.track_selection.get(i)
+            if current_selection is None or current_selection not in all_tracks_map:
+                current_selection = list(all_tracks_map.keys())[0]
+                st.session_state.track_selection[i] = current_selection
 
-        # Find the index of the current selection
-        track_ids = list(all_tracks_map.keys())
-        current_index = track_ids.index(current_selection) if current_selection in track_ids else 0
+            track_ids = list(all_tracks_map.keys())
+            current_index = track_ids.index(current_selection) if current_selection in track_ids else 0
 
-        # Create selectbox with proper index
-        selected_id = st.selectbox(
-            f"Select track for scene {i+1}",
-            options=track_ids,
-            format_func=lambda tid: all_tracks_map[tid]["name"],
-            key=f"track_select_{i}",
-            index=current_index
-        )
+            selected_id = st.selectbox(
+                f"Select track for scene {i+1}",
+                options=track_ids,
+                format_func=lambda tid: f"{all_tracks_map[tid]['name']} ({format_time(all_tracks_map[tid].get('duration', 0))})",
+                key=f"track_select_{i}",
+                index=current_index
+            )
 
-        # Update session state with the new selection
-        if selected_id != st.session_state.track_selection.get(i):
-            st.session_state.track_selection[i] = selected_id
+            if selected_id != st.session_state.track_selection.get(i):
+                st.session_state.track_selection[i] = selected_id
+            
+            # Show track info
+            track_duration = all_tracks_map[selected_id].get('duration', 0)
+            st.info(f"Track duration: {format_time(track_duration)}")
 
-        effects = st.multiselect(
-            f"Audio Effects for scene {i+1}",
-            ["Fade In", "Fade Out", "Reverse", "Echo", "Volume Ramp Up", "Volume Ramp Down", "Pitch Shift Up", "Pitch Shift Down"],
-            default=st.session_state.assignments.get(i, {}).get("effects", []),
-            key=f"effects_{i}"
-        )
+        with col2:
+            st.write("**🎵 Music Timing (MM:SS):**")
+            music_start_min = st.number_input(f"Start Min", min_value=0, max_value=59, value=0, key=f"music_start_min_{i}")
+            music_start_sec = st.number_input(f"Start Sec", min_value=0, max_value=59, value=0, key=f"music_start_sec_{i}")
+            
+            # Auto-suggest end time based on scene duration
+            default_end_min = int(scene_duration // 60)
+            default_end_sec = int(scene_duration % 60)
+            
+            music_end_min = st.number_input(f"End Min (0 for auto)", min_value=0, max_value=59, value=0, key=f"music_end_min_{i}")
+            music_end_sec = st.number_input(f"End Sec (0 for auto)", min_value=0, max_value=59, value=0, key=f"music_end_sec_{i}")
 
-        # Always use the selected_id for assignment
+        with col3:
+            effects = st.multiselect(
+                f"Audio Effects",
+                ["Fade In", "Fade Out", "Reverse", "Echo", "Volume Ramp Up", "Volume Ramp Down", "Pitch Shift Up", "Pitch Shift Down"],
+                default=st.session_state.assignments.get(i, {}).get("effects", []),
+                key=f"effects_{i}"
+            )
+
+        music_start_time = time_to_seconds(music_start_min, music_start_sec)
+        music_end_time = time_to_seconds(music_end_min, music_end_sec)
+        
+        # Auto-calculate music end time if not specified
+        if music_end_time == 0:
+            music_end_time = music_start_time + scene_duration
+
         st.session_state.assignments[i] = {
             "start_time": start,
             "end_time": end,
+            "music_start": music_start_time,
+            "music_end": music_end_time,
             "track": all_tracks_map[selected_id],
             "effects": effects
         }
+        
+        # Show timing summary
+        st.write(f"**Summary:** Video ({format_time(scene_duration)}) ← Music {format_time(music_start_time)}-{format_time(music_end_time)}")
 
         if st.button(f"Save assignment for scene {i+1}", key=f"save_{i}"):
             log_user_selection(sub_mood, all_tracks_map[selected_id])
@@ -367,7 +449,6 @@ def automatic_assignment_interface(all_tracks_map, sub_mood):
 def render_tab():
     st.header("3. Render Final Video")
     
-    # Check what assignments we have
     assignments_source = "manual segments" if st.session_state.manual_mode else "automatic scenes"
     
     if not st.session_state.video_path or not st.session_state.assignments:
@@ -381,11 +462,15 @@ def render_tab():
     for i, assignment in st.session_state.assignments.items():
         start = assignment["start_time"]
         end = assignment["end_time"]
+        music_start = assignment.get("music_start", 0)
+        music_end = assignment.get("music_end", end - start)
         track_name = assignment["track"]["name"]
+        track_duration = assignment["track"].get("duration", 0)
         effects = assignment.get("effects", [])
         
-        st.write(f"**Segment {i+1}:** {format_time(start)} - {format_time(end)}")
-        st.write(f"  • Track: {track_name}")
+        st.write(f"**Segment {i+1}:** Video {format_time(start)}-{format_time(end)} ({format_time(end-start)})")
+        st.write(f"  • Track: {track_name} (Duration: {format_time(track_duration)})")
+        st.write(f"  • Music portion: {format_time(music_start)}-{format_time(music_end)} ({format_time(music_end-music_start)})")
         if effects:
             st.write(f"  • Effects: {', '.join(effects)}")
     
@@ -400,8 +485,6 @@ def render_tab():
         if success:
             st.video(output)
             st.success("🎉 Video rendered successfully!")
-            
-            # Provide download link info
             st.info(f"💾 Your video has been saved temporarily. You can right-click the video above to save it.")
         else:
             st.error("❌ Failed to render video. Check the debug.log for details.")
